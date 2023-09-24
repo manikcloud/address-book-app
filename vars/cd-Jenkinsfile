@@ -21,6 +21,7 @@ pipeline {
     }
     environment {
         APP_REPO_NAME = 'address-book-app'
+        ACR_REPO = 'aksacrapp.azurecr.io'
     }    
     stages {
         stage('APP Details') {
@@ -38,19 +39,25 @@ pipeline {
                             env.APP_VERSION = sh(script: 'cat pom.xml | xq -x //version | head -1', returnStdout: true).trim()
                             env.IMAGE_NAME = "${env.ENVIRONMENT}-${env.APP_NAME}:${env.APP_VERSION}"
                             echo "${env.IMAGE_NAME}"
-                            // env.DOCKER_TAG = sh(script: 'git log --format="%h" -n 1', returnStdout: true).trim()
-                            env.DOCKER_IMAGE = "aksacrapp.azurecr.io/${env.IMAGE_NAME}"
+                            env.DOCKER_IMAGE = "${env.ACR_REPO}/${env.IMAGE_NAME}"
                         }
                     }
                 }
             }
         }
 
-        stage('APP Deploymentto AKS') {
+        stage('Deployment on AKS') {
             steps {
                 container('kbctl-helm') {
-                    sh "helm upgrade --install ${env.ENVIRONMENT}-${env.APP_NAME} golden-chart/ -n ${env.ENVIRONMENT}-${env.APP_NAME} -f  ${env.ENVIRONMENT}/${env.APP_NAME}/values.yaml --set=image.name=${env.ENVIRONMENT}-${env.APP_NAME} --set=image.tag=${env.APP_VERSION} --create-namespace"
-                    sh "helm ls -A"
+                    sh "helm upgrade --install ${env.ENVIRONMENT}-${env.APP_NAME} golden-chart/ " +
+                    "-n ${env.ENVIRONMENT}-${env.APP_NAME} " +
+                    "-f ${env.ENVIRONMENT}/${env.APP_NAME}/values.yaml " +
+                    "--set=image.repository=${env.ACR_REPO}/${env.ENVIRONMENT}-${env.APP_NAME} " +
+                    "--set=image.tag=${env.APP_VERSION} " +
+                    "--set=fullnameOverride=${env.ENVIRONMENT}-${env.APP_NAME} " +
+                    "--create-namespace"
+                    
+                    sh 'helm ls -A'
                 }
             }
         }

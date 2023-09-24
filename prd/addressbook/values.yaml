@@ -1,14 +1,14 @@
 replicaCount: 1
 
 image:
-  repository: aksacrapp.azurecr.io/addressbook
+  repository: ""
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: ""
 
 imagePullSecrets: []
 nameOverride: ""
-fullnameOverride: "prd-java-calc"
+fullnameOverride: ""
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -36,8 +36,8 @@ securityContext: {}
   # runAsUser: 1000
 
 service:
-  type: NodePort
-  port: 8090
+  type: ClusterIP
+  port: 80
   containerPort: 8080
 
 ingress:
