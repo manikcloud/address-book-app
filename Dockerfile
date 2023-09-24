@@ -1,5 +1,3 @@
-
-
 # Use the official Tomcat image as the base image for the runtime
 FROM tomcat:9.0-jdk11
 
