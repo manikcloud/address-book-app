@@ -42,7 +42,6 @@
               }
             }
           }
-
           stage('Build') {
             steps {
               dir("${WORKSPACE}/${env.APP_REPO_NAME}/") {
@@ -64,7 +63,6 @@
                 }          
               }
           }
-
           stage('checkstyle scan') {
               steps {
                 dir("${WORKSPACE}/${env.APP_REPO_NAME}/") { 
@@ -82,21 +80,6 @@
                   }
               } 
           } 
-
-          // stage("Quality Gate") {
-          //   steps {
-          //     timeout(time: 2, unit: 'MINUTES') {
-          //       waitForQualityGate abortPipeline: true
-          //     }
-          //   }
-          // }   
-
-          // stage("list files") {
-          //     steps {
-          //         sh "ls -l *" 
-          //     }
-          // }
-
           stage('ACR Login') { 
               steps {
                   withCredentials([usernamePassword(credentialsId: 'aksacrapp', usernameVariable: 'ACR_USERNAME', passwordVariable: 'ACR_PASSWORD')]) {
