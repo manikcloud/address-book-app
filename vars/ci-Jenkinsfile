@@ -51,7 +51,7 @@
               }
             }
           }
-          stage("Unit Test") {               
+          stage("Test") {               
               steps {       
                 dir("${WORKSPACE}/${env.APP_REPO_NAME}/") {              
                   sh "mvn test"               
@@ -92,11 +92,11 @@
           //   }
           // }   
 
-          stage("list files") {
-              steps {
-                  sh "ls -l *" 
-              }
-          }
+          // stage("list files") {
+          //     steps {
+          //         sh "ls -l *" 
+          //     }
+          // }
 
           stage('Docker Login to ACR') { 
               steps {
