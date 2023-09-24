@@ -1,0 +1,134 @@
+  pipeline {
+      agent {
+          kubernetes {
+              inheritFrom 'jenkins-jenkins-agent'
+              idleMinutes 5
+              yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                  restartPolicy: Never
+                  containers:
+                    - name: maven
+                      image: aksacrops.azurecr.io/maven:jdk-11-slim
+                      command: ["tail", "-f", "/dev/null"]
+                      imagePullPolicy: Always
+                    - name: docker
+                      image: docker:dind
+                      imagePullPolicy: Always
+                      securityContext:
+                        privileged: true
+              '''
+              defaultContainer 'maven'
+          }
+      }
+        environment {
+          APP_REPO_NAME = 'address-book-app'
+          SONAR_URL = 'http://3.84.119.54:9000'
+        }
+        stages {
+          stage('Git Checkout') {
+            steps {
+              sh "git clone https://github.com/manikcloud/${env.APP_REPO_NAME}.git"
+                dir("${WORKSPACE}/${env.APP_REPO_NAME}/") {
+                  script {
+                      env.APP_NAME = sh(script: 'cat pom.xml | xq -x //artifactId | head -1', returnStdout: true).trim()
+                      env.ENVIRONMENT = 'prd'
+                      env.APP_VERSION = sh(script: 'cat pom.xml | xq -x //version | head -1', returnStdout: true).trim()
+                      env.IMAGE_NAME = "${env.ENVIRONMENT}-${env.APP_NAME}:${env.APP_VERSION}"
+                      echo "${env.IMAGE_NAME}"
+                      // env.DOCKER_TAG = sh(script: 'git log --format="%h" -n 1', returnStdout: true).trim()
+                      env.DOCKER_IMAGE = "aksacrapp.azurecr.io/${env.IMAGE_NAME}"
+                }
+              }
+            }
+          }
+
+          stage('Build') {
+            steps {
+              dir("${WORKSPACE}/${env.APP_REPO_NAME}/") {
+                sh "mvn clean install"
+              }
+            }
+          }
+          stage("Unit Test") {               
+              steps {       
+                dir("${WORKSPACE}/${env.APP_REPO_NAME}/") {              
+                  sh "mvn test"               
+              }
+            }
+          }
+          stage("Package") {               
+              steps {  
+                dir("${WORKSPACE}/${env.APP_REPO_NAME}/") {                   
+                  sh "mvn package"     
+                }          
+              }
+          }
+
+          stage('checkstyle scan') {
+              steps {
+                dir("${WORKSPACE}/${env.APP_REPO_NAME}/") { 
+                  sh 'mvn checkstyle:checkstyle'
+                  recordIssues tools: [checkStyle(pattern: '**/checkstyle-result.xml')]
+                }
+              }
+          }
+            stage("SonarQube Scan") {
+                steps {
+                  withSonarQubeEnv('sonarqube') {
+                      dir("${WORKSPACE}/${env.APP_REPO_NAME}/") { 
+                          sh "mvn verify sonar:sonar -Dsonar.host.url=${SONAR_URL}"                        
+                      }
+                  }
+              } 
+          } 
+
+          // stage("Quality Gate") {
+          //   steps {
+          //     timeout(time: 2, unit: 'MINUTES') {
+          //       waitForQualityGate abortPipeline: true
+          //     }
+          //   }
+          // }   
+
+          // stage("list files") {
+          //     steps {
+          //         sh "ls -l *" 
+          //     }
+          // }
+
+          stage('ACR Login') { 
+              steps {
+                  withCredentials([usernamePassword(credentialsId: 'aksacrapp', usernameVariable: 'ACR_USERNAME', passwordVariable: 'ACR_PASSWORD')]) {
+                      container('docker') {
+                      sh """
+                      docker login aksacrapp.azurecr.io -u $ACR_USERNAME -p $ACR_PASSWORD
+                      """
+                      }
+                  }
+              }
+          }
+          // Assuming a stage to build the Docker image: 
+          stage('Build Image') {
+              steps {
+                  container('docker') {
+                    dir("${WORKSPACE}/${env.APP_REPO_NAME}/") {
+                      sh """
+                      docker build -t ${env.DOCKER_IMAGE} .
+                      """
+                    }
+                  }
+                }
+          }
+          stage('Push Image to ACR') {
+              steps {
+                container('docker') {              
+                  sh """
+                  docker push ${env.DOCKER_IMAGE}
+                  """
+                }
+              }
+          }                
+        }
+  }
