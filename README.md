@@ -27,6 +27,18 @@ Each application repository contains a standardized directory structure, includi
 - `golden-chart`: Contains Helm chart files for Kubernetes deployments.
 - `prd`: This directory is named after the artifact in the application's `pom.xml`. Inside it, a `values.yaml` file is used to customize the Helm chart for different environments.
 
+- Inside the `prd` directory, the directory name should match the artifact name in the `pom.xml` file.
+```
+pom.xml ├── **prd**
+│   └── addressbook
+│       └── values.yaml
+
+```
+- artifact name in the `pom.xml` 
+
+```
+    <artifactId>addressbook</artifactId>
+```
 ## CI/CD Integration
 The CI (`ci-Jenkinsfile`) and CD (`cd-Jenkinsfile`) pipelines are standardized across all application repositories. Developers only need to specify the repository name to integrate seamlessly. The setup is compatible with any Java Maven application. To adapt a new application, ensure that the name of the `prd` directory matches the artifact name in the application's `pom.xml`.
 
