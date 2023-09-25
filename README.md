@@ -74,3 +74,58 @@ The CI (`ci-Jenkinsfile`) and CD (`cd-Jenkinsfile`) pipelines are standardized a
 
 ---
 
+# Address Book & CALC Application Deployment Process
+
+The given code represents a Continuous Integration and Continuous Deployment (CI/CD) pipeline, designed to automate the processes of code checkout, build, test, package, and deployment for the `address-book-app`. This pipeline is defined using a Jenkins declarative pipeline syntax and is configured to run within a Kubernetes cluster.
+
+## Pipeline Stages
+
+### 1. **Git Checkout**:
+   - The pipeline checks out the source code of `address-book-app` from its repository on GitHub.
+   - It then reads the `pom.xml` to fetch the `artifactId`, `version` and prepares the `IMAGE_NAME` for later stages.
+
+### 2. **Build**:
+   - Executes a Maven build (`mvn clean install`) to compile the source code, and perform initial testing.
+
+### 3. **Test**:
+   - Runs unit tests using Maven (`mvn test`).
+
+### 4. **Package**:
+   - Packages the compiled code into a JAR file (`mvn package`).
+
+### 5. **Checkstyle Scan**:
+   - Runs a Checkstyle scan to ensure the code adheres to coding standards and guidelines.
+
+### 6. **SonarQube Scan**:
+   - Performs a SonarQube scan to measure and analyze code quality.
+
+### 7. **Docker Login to ACR**:
+   - Logs into Azure Container Registry (ACR) using provided credentials.
+
+### 8. **Build Docker Image**:
+   - Builds a Docker image of the application, tagging it with the earlier prepared `IMAGE_NAME`.
+
+### 9. **Push Docker Image to ACR**:
+   - Pushes the newly built Docker image to the Azure Container Registry.
+
+## Environment Variables
+
+- `APP_REPO_NAME`: Specifies the name of the application repository.
+- `ACR_REPO`: Specifies the Azure Container Registry repository where Docker images are stored.
+- `APP_NAME`, `ENVIRONMENT`, `APP_VERSION`, `IMAGE_NAME`, `DOCKER_IMAGE`: These variables are derived from the application's `pom.xml` and repository configuration, used in naming and tagging the Docker image.
+
+## Kubernetes Configuration
+
+The pipeline is configured to run on a Kubernetes agent, with a custom pod specification that includes two containers: one for Maven (`maven:jdk-11-slim`) and one for Docker (`docker:dind`). This allows the pipeline to have all the necessary tools available for building, packaging, and dockerizing the application.
+
+## Comments on Skipped Stages
+
+There are some commented-out stages in the pipeline:
+- **Quality Gate**: This stage would typically wait for a response from SonarQube to ensure the code passes all defined quality gates before proceeding.
+- **List Files**: This stage would list all files in the current directory, perhaps for diagnostic or logging purposes.
+
+## Integration with README
+
+To add this pipeline explanation to your `README.md`, copy the markdown content from this document and append it to your `README.md`. This will provide a detailed explanation of how the CI/CD pipeline works, and how it is structured to automate the deployment process of the `address-book-app`.
+
+
