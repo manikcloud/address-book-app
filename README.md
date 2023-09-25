@@ -3,6 +3,57 @@
 ## Overview
 This document describes the streamlined workflow for deploying Java applications across various teams in our organization. The process leverages multiple Git repositories, each serving a specific purpose in the CI/CD pipeline.
 
+## Assumptions and Prerequisites
+
+### Assumptions
+
+1. **Team Structure**: The organization comprises three distinct teams:
+   - Platform Team
+   - DevOps Team (Team2)
+   - Development Team
+
+2. **Github Access**: Due to FSI (Financial Services Institution) regulations, the organization uses a private GitHub instance. All necessary modules, code repositories, and configurations are stored and maintained here.
+
+3. **Security Oversight**: The security team oversees the secure coding and deployment practices and provides tools and configurations such as SonarQube details for CI/CD pipelines.
+
+### Prerequisites
+
+#### Platform Team
+
+1. **Terraform**: 
+   - The team possesses expertise in Terraform and is responsible for maintaining Terraform scripts and modules.
+   - Necessary plugins and extensions for Terraform are installed and updated.
+
+2. **Azure Access**: 
+   - The team has the required permissions and access rights to manage and configure Azure resources.
+   - They are also responsible for creating and maintaining Azure policies, ensuring resource compliance with the organization's standards.
+
+3. **Github Management**:
+   - As the organization operates with a private Github instance, the platform team is responsible for managing repositories, permissions, and access controls.
+   - The team ensures that all Terraform modules and configurations are version-controlled and available on this Github.
+
+#### DevOps Team (Team2)
+
+1. **Jenkins Access**:
+   - The team has permissions and access rights to their LBUs (Logical Business Units) Jenkins job configurations and management.
+   - Responsible for setting up, configuring, and maintaining Jenkins pipelines specific to their LBUs.
+
+2. **Azure Container Registry (ACR) Access**:
+   - Team2 has the necessary permissions to push Docker images to the Azure Container Registry (ACR).
+   - They manage and maintain the Docker repositories in ACR relevant to their LBUs.
+
+3. **SonarQube Configuration**:
+   - The security team provides the details and configurations necessary for integrating SonarQube into Jenkins pipelines.
+   - Team2 ensures the proper integration of these details into the CI/CD pipelines, promoting secure coding practices.
+
+#### Development Team
+
+*Specific prerequisites and responsibilities can be further detailed based on the tasks and expectations from this team.*
+
+---
+
+**Note**: Effective communication and collaboration between these teams are paramount to ensure the smooth operation of CI/CD processes and the overall development lifecycle.
+
 ## Repositories
 
 ### 1. Infrastructure Repository
@@ -124,8 +175,38 @@ There are some commented-out stages in the pipeline:
 - **Quality Gate**: This stage would typically wait for a response from SonarQube to ensure the code passes all defined quality gates before proceeding.
 - **List Files**: This stage would list all files in the current directory, perhaps for diagnostic or logging purposes.
 
-## Integration with README
+---
 
-To add this pipeline explanation to your `README.md`, copy the markdown content from this document and append it to your `README.md`. This will provide a detailed explanation of how the CI/CD pipeline works, and how it is structured to automate the deployment process of the `address-book-app`.
+# Address Book Application Deployment on AKS
 
+The given code describes a Jenkins CI/CD pipeline that manages the deployment of the `address-book-app` on an Azure Kubernetes Service (AKS) cluster using Helm. The pipeline is structured to run within a Kubernetes pod to handle application details extraction, image selection, and deployment operations.
+
+## Pipeline Stages
+
+### 1. **APP Details**:
+   - The pipeline checks out the source code of `address-book-app` from its GitHub repository to access the application's details.
+
+### 2. **App Image Selection**:
+   - This stage operates inside a `kbctl-helm` container.
+   - It reads the `pom.xml` file to extract the `artifactId` and `version` of the application.
+   - Constructs the `IMAGE_NAME` and `DOCKER_IMAGE` using environment information, application name, and version. 
+
+### 3. **Deployment on AKS**:
+   - Again, this stage utilizes the `kbctl-helm` container.
+   - Uses Helm to upgrade (or install if not already deployed) the application on the AKS cluster.
+   - Deploys the application using the `golden-chart` Helm chart.
+   - Overrides default values using the `values.yaml` file found within the environment's directory, and sets image repository and tag information.
+   - Lastly, lists all deployed Helm releases to verify the deployment.
+
+## Environment Variables
+
+- `APP_REPO_NAME`: The name of the application repository, in this case, `address-book-app`.
+- `ACR_REPO`: Specifies the Azure Container Registry where the Docker image of the application resides.
+- `APP_NAME`, `ENVIRONMENT`, `APP_VERSION`, `IMAGE_NAME`, `DOCKER_IMAGE`: These variables hold application details derived from the `pom.xml` and are used throughout the pipeline.
+
+## Kubernetes Configuration
+
+The pipeline uses a Kubernetes agent with a custom pod configuration. This pod contains a container `kbctl-helm`, which seems to be a custom image equipped with tools like `kubectl` and `helm`. This container is crucial for interacting with the AKS cluster and deploying the application using Helm.
+
+---
 
