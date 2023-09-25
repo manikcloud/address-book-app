@@ -9,7 +9,7 @@ This document describes the streamlined workflow for deploying Java applications
 
 1. **Team Structure**: The organization comprises three distinct teams:
    - Platform Team
-   - DevOps Team (Team2)
+   - DevOps Team 
    - Development Team
 
 2. **Github Access**: Due to FSI (Financial Services Institution) regulations, the organization uses a private GitHub instance. All necessary modules, code repositories, and configurations are stored and maintained here.
@@ -32,7 +32,7 @@ This document describes the streamlined workflow for deploying Java applications
    - As the organization operates with a private Github instance, the platform team is responsible for managing repositories, permissions, and access controls.
    - The team ensures that all Terraform modules and configurations are version-controlled and available on this Github.
 
-#### DevOps Team (Team2)
+#### DevOps Team 
 
 1. **Jenkins Access**:
    - The team has permissions and access rights to their LBUs (Logical Business Units) Jenkins job configurations and management.
@@ -210,3 +210,13 @@ The pipeline uses a Kubernetes agent with a custom pod configuration. This pod c
 
 ---
 
+- Dockerfile + Terraform + K8s - Take any sample java / application from the internet or build a simple one of your own. Write a docker file and package it into a docker image. Build the docker image and push it to the Azure ACR using terraform.
+- Write a terraform code to create a 3-tier Network and its components, create a K8s cluster.
+- Jenkins CI is running on a separate Cluster with Build agents. ( Also write Docker files for build agent required for above project)
+- Scan the code for Standards and Vulnerabilities.
+- Do scan the package before creating the image.
+- Pipeline should be reusable in future (modular) and parameterized.
+- Separate Pipeline for CI & CD. CI to be triggered when a Pull is Merged in SCM. CD to be triggered from JIRA release task.
+- Do list all the ID that are required before this setup can be run also prepare a Readme for the DevOps team to implement this project and list all the assumption in the same. Code should be well documented and all the Variables used should be documented as well.
+- Upload all the files in appropriate folders onto a GIT repo and share the link.
+Cloud platform  is Azure
